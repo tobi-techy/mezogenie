@@ -1,0 +1,12 @@
+{
+  "name": "mezogenie",
+  "private": true,
+  "workspaces": ["contracts", "backend", "web"],
+  "scripts": {
+    "build:contracts": "npm run build --workspace=contracts",
+    "test:contracts": "npm run test --workspace=contracts",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:web": "npm run dev --workspace=web",
+    "deploy": "npm run deploy --workspace=contracts"
+  }
+}
