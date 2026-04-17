@@ -1,9 +1,11 @@
-import OpenAI from "openai";
+import Groq from "groq-sdk";
 import * as chain from "./chain.js";
 import * as db from "./db.js";
 import type { Address } from "viem";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+const MODEL = "llama-3.3-70b-versatile";
 
 const SYSTEM_PROMPT = `You are MezoGenie, a friendly Bitcoin banking assistant that lives in iMessage.
 You help users:
@@ -18,7 +20,7 @@ When executing transactions, always confirm with the user first.
 Format numbers clearly (e.g., "$500", "0.012 BTC").
 If the user hasn't connected a wallet yet, guide them to the connect link.`;
 
-const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
+const tools: Groq.Chat.Completions.ChatCompletionTool[] = [
   {
     type: "function",
     function: {
@@ -104,14 +106,12 @@ async function executeTool(name: string, args: Record<string, unknown>, userPhon
       const recipientPhone = args.recipient_phone as string;
       const amount = args.usd_amount as number;
       const savings = (args.savings_percent as number) || 0;
-      // For hackathon: estimate collateral at ~1.5x (150% ratio)
-      const btcPrice = 67000; // TODO: fetch from Pyth
+      const btcPrice = 67000;
       const collateralUSD = amount * 1.5;
       const collateralBTC = (collateralUSD / btcPrice).toFixed(6);
 
       let recipientWallet = db.getRecipient(recipientPhone)?.wallet;
       if (!recipientWallet) {
-        // Generate a placeholder address for the recipient
         recipientWallet = "0x" + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
         db.upsertRecipient(recipientPhone, recipientWallet, userPhone);
       }
@@ -164,13 +164,12 @@ async function executeTool(name: string, args: Record<string, unknown>, userPhon
 }
 
 // Conversation history per phone number (in-memory for hackathon)
-const conversations = new Map<string, OpenAI.Chat.Completions.ChatCompletionMessageParam[]>();
+const conversations = new Map<string, Groq.Chat.Completions.ChatCompletionMessageParam[]>();
 
 export async function processMessage(phone: string, message: string): Promise<string> {
   const user = db.getUser(phone);
   const history = conversations.get(phone) || [];
 
-  // Add context about the user
   const userContext = user
     ? `User phone: ${phone}, wallet: ${user.wallet}`
     : `User phone: ${phone}, wallet: NOT CONNECTED. Guide them to connect at: ${process.env.WEBHOOK_URL || "https://your-app.com"}/connect?phone=${encodeURIComponent(phone)}`;
@@ -184,8 +183,8 @@ export async function processMessage(phone: string, message: string): Promise<st
   // Keep history manageable
   if (history.length > 20) history.splice(1, 2);
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o",
+  const response = await groq.chat.completions.create({
+    model: MODEL,
     messages: history,
     tools,
     tool_choice: "auto",
@@ -202,9 +201,8 @@ export async function processMessage(phone: string, message: string): Promise<st
       history.push({ role: "tool", tool_call_id: toolCall.id, content: result });
     }
 
-    // Get final response after tool execution
-    const finalResponse = await openai.chat.completions.create({
-      model: "gpt-4o",
+    const finalResponse = await groq.chat.completions.create({
+      model: MODEL,
       messages: history,
       tools,
     });

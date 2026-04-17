@@ -58,7 +58,7 @@ Natural language interface powered by GPT-4o with function calling. Ask anything
 ┌──────────────────────────────────────────────────────────┐
 │                 BACKEND (Node.js)                         │
 │                                                           │
-│  Sendblue Handler → AI Agent (GPT-4o) → Chain Service    │
+│  Sendblue Handler → AI Agent (Groq/Llama) → Chain Service    │
 │                     6 tools via          (viem + Mezo)    │
 │                     function calling                      │
 │                                                           │
@@ -137,7 +137,7 @@ mezogenie/
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
 | Messaging | [Sendblue API v2](https://docs.sendblue.com) | iMessage send/receive, typing indicators, tapbacks, SMS/RCS fallback |
-| AI | OpenAI GPT-4o | Natural language understanding + function calling for on-chain actions |
+| AI | [Groq](https://groq.com) (Llama 3.3 70B) | Natural language understanding + function calling for on-chain actions — free & fast |
 | Smart Contracts | Solidity 0.8.28 + Hardhat | RemitVault, SafeVault — deployed on Mezo testnet |
 | Backend | Node.js + Express + TypeScript | Webhook handler, AI orchestration, chain interactions |
 | Chain | [viem](https://viem.sh) | Mezo testnet reads/writes via Boar Network RPC |
@@ -154,7 +154,7 @@ mezogenie/
 - Node.js 18+
 - npm
 - [Sendblue account](https://dashboard.sendblue.com/company-signup) (free for 10 contacts)
-- [OpenAI API key](https://platform.openai.com/api-keys)
+- [Groq API key](https://console.groq.com) (free)
 - Testnet BTC from [Mezo Faucet](https://faucet.test.mezo.org)
 
 ### 1. Clone & Install
@@ -175,7 +175,7 @@ cd web && npm install && cd ..
 cp .env.example .env
 # Fill in your keys:
 # - SENDBLUE_API_KEY / SENDBLUE_API_SECRET
-# - OPENAI_API_KEY
+# - GROQ_API_KEY (free from console.groq.com)
 # - DEPLOYER_PRIVATE_KEY (funded with testnet BTC)
 ```
 
@@ -294,4 +294,4 @@ MIT
 - [Sendblue](https://sendblue.com) — iMessage API
 - [Boar Network](https://boar.network) — RPC infrastructure
 - [Encode Club](https://encode.club) — Hackathon organization
-- [OpenAI](https://openai.com) — GPT-4o for the AI agent
+- [Groq](https://groq.com) — Llama 3.3 70B inference for the AI agent
